@@ -9,13 +9,15 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract KINR is ERC20, ERC20Burnable, Pausable, Ownable {
     address[] admins;
 
-    constructor() ERC20("KINR", "KINR") {}
+    constructor() ERC20("KINR", "KINR") {
+        addAdmin(msg.sender);
+    }
 
-    function addAdmin(address _newAdmin) public {
+    function addAdmin(address _newAdmin) public onlyOwner{
         admins.push(_newAdmin);
     }
 
-    function removeAdmin(address _admin) public {
+    function removeAdmin(address _admin) public onlyOwner{
         admins[getAdminIndex(_admin)] = admins[admins.length - 1];
         admins.pop();
     }
