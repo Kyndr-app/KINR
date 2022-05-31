@@ -7,17 +7,22 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract KINR is ERC20, ERC20Burnable, Pausable, Ownable {
-    address[] admins;
+    address[] public admins;
 
     constructor() ERC20("KINR", "KINR") {
         addAdmin(msg.sender);
     }
 
-    function addAdmin(address _newAdmin) public onlyOwner{
+    ///@notice that the owner can add admin and validates is the new admin is an admin already.
+
+    function addAdmin(address _newAdmin) public onlyOwner {
+        require(!isAdmin(_newAdmin), "Error: This address is already an admin");
         admins.push(_newAdmin);
     }
 
-    function removeAdmin(address _admin) public onlyOwner{
+    ///@notice that an address can be removed as an admin by the owner
+
+    function removeAdmin(address _admin) public onlyOwner {
         admins[getAdminIndex(_admin)] = admins[admins.length - 1];
         admins.pop();
     }
@@ -33,6 +38,8 @@ contract KINR is ERC20, ERC20Burnable, Pausable, Ownable {
         return index;
     }
 
+    ///@notice this function validates if an address is already an admin
+
     function isAdmin(address caller) internal view returns (bool admin) {
         admin = false;
         for (uint256 i = 0; i < admins.length; i++) {
@@ -40,6 +47,8 @@ contract KINR is ERC20, ERC20Burnable, Pausable, Ownable {
         }
         return admin;
     }
+
+    ///@notice that the contract can be paused and unpaused by the owner
 
     function pause() public onlyOwner {
         _pause();
@@ -49,12 +58,25 @@ contract KINR is ERC20, ERC20Burnable, Pausable, Ownable {
         _unpause();
     }
 
+    ///@notice that only an admin address can create more tokens
+    // The idea behind this is that only autorizhed oracles can perform the minting
+
     function mint(address to, uint256 amount) public {
         require(
             isAdmin(msg.sender),
             "This address doens't has the proper permissios"
         );
         _mint(to, amount);
+    }
+
+    ///@notice that only an admin address can buirn tokens
+
+    function burn(uint256 amount) public override {
+        require(
+            isAdmin(msg.sender),
+            "This address doens't has the proper permissios"
+        );
+        super.burn(amount);
     }
 
     function burnFrom(address from, uint256 amount) public override {
